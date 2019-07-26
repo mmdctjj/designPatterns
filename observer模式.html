@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>observer模式</title>
+  </head>
+  <body>
+    <button id="addObserver">关注这个爱豆</button>
+    <input id="subject" type="text" placeholder="哎，我是别人的爱豆" />
+    <div id="container"></div>
+    <script type="text/javascript">
+      // 维护的列表
+      class ObserverList {
+        // 初始化空列表
+        observerList = [];
+      }
+      // 添加方法
+      ObserverList.prototype.Add = function(obj) {
+        this.observerList.push(obj);
+      };
+      ObserverList.prototype.Count = function() {
+        return this.observerList.length;
+      };
+      ObserverList.prototype.Get = function(index) {
+        if (index > -1 && index < this.observerList.length) {
+          return this.observerList[index];
+        }
+      };
+
+      // 扩展对象
+      function extend(obj, extension) {
+        for (const key in obj) {
+          extension[key] = obj[key];
+        }
+      }
+
+      class Subject {
+        // 实例化一个空列表
+        observerList = new ObserverList();
+      }
+      // 目标原型链添加增加观察者功能
+      Subject.prototype.Add = function(obj) {
+        this.observerList.Add(obj);
+      };
+      // 目标原型链添加增加广播功能
+      Subject.prototype.Notify = function(news) {
+        let observerListCount = this.observerList.Count();
+        for (let i = 0; i < observerListCount; i++) {
+          // updata需要在观察者对象上定义
+          this.observerList.Get(i).Update(news);
+        }
+      };
+
+      // 观察者
+      function Observer() {
+        this.Update = function() {};
+      }
+
+      var addObserver = document.getElementById("addObserver"),
+        subject = document.getElementById("subject"),
+        container = document.getElementById("container"),
+        num = 0;
+      // 通过扩展函数，可以实例化一个目标,ta是个dom元素
+      extend(new Subject(), subject);
+      // 当目标失去聚焦时触发目标的广播功能
+      subject.onblur = new Function("subject.Notify(subject.value)");
+      // 每个点击事件都是添加一个观察者对象
+      addObserver.onclick = () => {
+        num += 1;
+        // 创建一个节点，ta代表一个观察者
+        var node = document.createElement("input");
+        node.type = "text";
+        node.placeholder = "我是你的粉丝" + num;
+        // 同样的额道理，将观察者的所有属性和方法扩展给每个观察者
+        extend(new Observer(), node);
+        // 目标的观察者+1
+        subject.Add(node);
+        // 这里就是我们具体自定义updata函数的地方
+        node.Update = value => {
+          node.value = value;
+        };
+        // 将节点添加到容器中
+        container.appendChild(node);
+      };
+    </script>
+  </body>
+</html>
